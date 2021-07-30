@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=, initial-scale=1.0">
+    <title>Ninja Man</title>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+        
+        .row {
+            line-height: 0;
+        }
+        
+        .wall {
+            background-color: blue;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+        }
+        
+        .sushi {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url("images/sushi.png");
+            background-size: contain;
+        }
+        
+        .onigiri {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url("images/onigiri.png");
+            background-size: contain;
+        }
+        
+        .blank {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+        }
+        
+        #ninjaman {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url("images/ninja.gif");
+            background-size: contain;
+            position: absolute;
+        }
+        
+        #points {
+            position: absolute;
+            top: 40px;
+            left: 300px;
+        }
+        
+        .para {
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: rgb(32, 32, 124);
+            color: white;
+            border-radius: 10px;
+            padding: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="world"></div>
+    <div id="ninjaman"></div>
+    <div id="oni"></div>
+    <button id="randomBtn">Random World</button>
+    <div id="points">
+        <p class="para">Sushi's Eaten</p>
+        <p id="sushis"></p>
+
+        <p class="para">Onigiri's Eaten</p>
+        <p id="onigiris"></p>
+
+        <p class="para">Total Points:</p>
+        <p id="pointsNum"></p>
+
+        <p id="gameOver"></p>
+    </div>
+
+</body>
+<script type="text/javascript">
+    var points = 0;
+    var gameNotOver = true;
+    var sushis = 0;
+    var onigiris = 0;
+    var randomOrNormal = "normal";
+    var world = []
+    var ninjaman = {
+        x: 1,
+        y: 1
+    }
+
+    // Dictionary for World layout. This is an object in Javascript
+    const worldDict = {}
+
+    document.onkeydown = function(e) {
+        if (e.keyCode == 37) { // left
+            if (world[ninjaman.y][ninjaman.x - 1] != 1) {
+                ninjaman.x--;
+            }
+        }
+        if (e.keyCode == 38) { // up
+            if (world[ninjaman.y - 1][ninjaman.x] != 1) {
+                ninjaman.y--;
+            }
+        }
+        if (e.keyCode == 39) { // right
+            if (world[ninjaman.y][ninjaman.x + 1] != 1) {
+                ninjaman.x++;
+            }
+        }
+        if (e.keyCode == 40) { // down
+            if (world[ninjaman.y + 1][ninjaman.x] != 1) {
+                ninjaman.y++;
+            }
+        }
+
+        gameOver();
+        pointsAccum();
+        world[ninjaman.y][ninjaman.x] = 0;
+        drawNinjaman();
+        drawWorld();
+    }
+
+    // World layout - table layout
+    function worldLayout() {
+        console.log(randomOrNormal);
+        switch (randomOrNormal) {
+            case "normal":
+                world = [
+                    [1, 1, 1, 1, 1],
+                    [1, 0, 2, 2, 1],
+                    [1, 2, 1, 2, 1],
+                    [1, 3, 2, 2, 1],
+                    [1, 0, 2, 2, 1],
+                    [1, 2, 1, 2, 1],
+                    [1, 2, 2, 2, 1],
+                    [1, 0, 2, 3, 1],
+                    [1, 2, 1, 2, 1],
+                    [1, 2, 2, 2, 1],
+                    [1, 1, 1, 1, 1]
+                ]
+                break;
+            case "random":
+                world = [
+                    [1, 1, 1, 1, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [1, 1, 1, 1, 1]
+                ]
+                randomWorld();
+                break;
+
+        }
+
+        worldDict[0] = "blank";
+        worldDict[1] = "wall";
+        worldDict[2] = "sushi";
+        worldDict[3] = "onigiri";
+    }
+
+    function drawWorld() {
+        var output = "";
+
+        for (var row = 0; row < world.length; row++) {
+            output += "<div class = 'row'>";
+
+            for (var x = 0; x < world[row].length; x++) {
+                output += "<div class = '" + worldDict[world[row][x]] + "'></div>";
+            }
+            output += "</div>";
+        }
+        document.getElementById("world").innerHTML = output;
+    }
+
+    function randomWorld() {
+        var maxRandomNumber = 4; // needs to be 1 more than max number wanted
+        for (var row = 1; row < world.length - 1; row++) {
+            for (var col = 1; col < world[row].length - 1; col++) {
+                var ranNum = Math.floor(Math.random() * maxRandomNumber);
+                world[row][col] = ranNum;
+            }
+        }
+
+        console.table(world);
+        ninjaman.x = 1;
+        ninjaman.y = 1;
+        world[ninjaman.y][ninjaman.x] = 0;
+    }
+
+    function drawNinjaman() {
+        document.getElementById("ninjaman").style.top = ninjaman.y * 40 + "px";
+        document.getElementById("ninjaman").style.left = ninjaman.x * 40 + "px";
+    }
+
+    function buttonClick() {
+        randomOrNormal = "random";
+        initializeEaten();
+        worldLayout();
+        drawNinjaman();
+        drawWorld();
+    }
+
+    function pointsAccum() {
+        if (world[ninjaman.y][ninjaman.x] == 2) {
+            points = points + 10;
+            sushis++;
+            console.log("Sushis points: ", sushis);
+        }
+
+        if (world[ninjaman.y][ninjaman.x] == 3) {
+            points = points + 5;
+            onigiris++;
+            console.log("Onigiris points: ", onigiris);
+        }
+
+        document.getElementById("sushis").innerHTML = sushis;
+        document.getElementById("onigiris").innerHTML = onigiris;
+        document.getElementById("pointsNum").innerHTML = points;
+    }
+
+    function gameOver() {
+        var numToLookFor1 = 2,
+            numToLookFor2 = 3,
+            numToLookForCounter = 0;
+        for (var row = 0; row < world.length; row++) {
+            for (var j = 0; j < world[row].length; j++) {
+                if (world[row].includes(numToLookFor1) || world[row].includes(numToLookFor2)) {
+                    numToLookForCounter++;
+                }
+                if (row == (world.length - 1) && j == (world[row].length - 1) && numToLookForCounter === 0) {
+                    document.getElementById("gameOver").style.fontSize = 40 + "px";
+                    document.getElementById("gameOver").innerHTML = "<br>Game Over"
+                }
+            }
+        }
+    }
+
+    function initializeEaten() {
+        document.getElementById("sushis").innerHTML = 0;
+        document.getElementById("onigiris").innerHTML = 0;
+        document.getElementById("pointsNum").innerHTML = 0;
+        document.getElementById("gameOver").innerHTML = "";
+        sushis = 0;
+        onigiris = 0;
+        points = 0;
+    }
+
+
+    document.getElementById("randomBtn").onclick = function() {
+        buttonClick()
+    };
+    worldLayout();
+    drawWorld();
+    drawNinjaman();
+    initializeEaten();
+</script>
+
+</html>
